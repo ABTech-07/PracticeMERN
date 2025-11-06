@@ -171,7 +171,7 @@ router.get('/me', async (req, res) => {
 
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-    const user = await User.findById(decoded.userId).populate('cart.product', 'name price images');
+    const user = await User.findById(decoded.userId);
     
     if (!user) {
       return res.status(401).json({

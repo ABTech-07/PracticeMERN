@@ -25,6 +25,9 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 
+// Serve static files (for product images)
+app.use('/images', express.static('public/images'));
+
 // Basic route to test server
 app.get('/', (req, res) => {
   res.json({ 
@@ -45,8 +48,39 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Debug route to check database info
+app.get('/api/debug/db-info', async (req, res) => {
+  try {
+    const User = require('./models/User');
+    const userCount = await User.countDocuments();
+    const sampleUsers = await User.find().limit(3).select('name email createdAt');
+    
+    res.json({
+      success: true,
+      database: {
+        name: mongoose.connection.name,
+        host: mongoose.connection.host,
+        readyState: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
+        collectionNames: Object.keys(mongoose.connection.collections)
+      },
+      users: {
+        count: userCount,
+        samples: sampleUsers
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 // API Routes
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/products', require('./routes/products'));
+app.use('/api/cart', require('./routes/cart'));
+app.use('/api/orders', require('./routes/orders'));
 
 // 404 handler for undefined routes
 app.use('*', (req, res) => {
